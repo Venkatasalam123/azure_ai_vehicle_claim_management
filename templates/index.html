@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Claim Management - Azure AI Services</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #004499;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: radial-gradient(circle at top left, #eef2ff 0, #e0f2fe 35%, #f3f4f6 70%, #e5e7eb 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .navbar-content {
+            max-width: 100%;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+        }
+        .navbar-brand:hover {
+            color: #e0e7ff;
+        }
+        .search-bar-container {
+            flex: 1;
+            min-width: 300px;
+            max-width: 600px;
+        }
+        .search-form {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .search-input {
+            flex: 1;
+            padding: 0.65rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+        .search-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.3);
+        }
+        .search-btn {
+            padding: 0.65rem 1.5rem;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .search-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+        }
+        .main-content {
+            padding: 2rem;
+            max-width: 100%;
+        }
+        .page-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .page-title {
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        .page-subtitle {
+            color: #475569;
+            font-size: 1rem;
+        }
+        .ai-strip {
+            background: rgba(15,23,42,0.55);
+            border-radius: 14px;
+            padding: 0.85rem 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #e5e7eb;
+            box-shadow: 0 18px 45px rgba(15,23,42,0.45);
+        }
+        @media (min-width: 992px) {
+            .ai-strip {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 1.25rem;
+            }
+        }
+        .ai-strip-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ai-strip-title i {
+            font-size: 1.25rem;
+        }
+        .ai-strip-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.65rem;
+        }
+        @media (min-width: 992px) {
+            .ai-strip-chips {
+                margin-top: 0;
+                justify-content: flex-end;
+            }
+        }
+        .ai-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: rgba(15,23,42,0.75);
+            border: 1px solid rgba(148,163,184,0.7);
+            backdrop-filter: blur(6px);
+        }
+        .ai-chip i {
+            font-size: 0.95rem;
+        }
+        .ai-chip-doc { border-color: rgba(59,130,246,0.85); color: #dbeafe; }
+        .ai-chip-vision { border-color: rgba(34,197,94,0.85); color: #dcfce7; }
+        .ai-chip-custom { border-color: rgba(244,114,182,0.85); color: #fce7f3; }
+        .ai-chip-search { border-color: rgba(249,115,22,0.85); color: #ffedd5; }
+        .ai-chip-language { border-color: rgba(129,140,248,0.85); color: #e0e7ff; }
+        .card {
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: 0 22px 45px rgba(15,23,42,0.22);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            background: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 1rem;
+        }
+        .card-header i {
+            font-size: 1.2rem;
+        }
+        .card-body {
+            padding: 1.5rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,102,204,0.4);
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0,102,204,0.25);
+        }
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        .file-input-label {
+            display: block;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-input-label:hover {
+            background: #e9ecef;
+            border-color: var(--primary-color);
+        }
+        .file-name {
+            margin-top: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        #processClaimBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #processClaimBtn.btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+            font-weight: 600;
+        }
+        .loading-modal {
+            display: none !important;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            overflow-y: auto;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-modal.show {
+            display: flex !important;
+        }
+        .loading-content {
+            background: white;
+            margin: auto;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: 0 22px 45px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .loading-content h3 {
+            font-size: 1rem;
+            margin-bottom: 0.4rem;
+        }
+        .loading-content p {
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+        }
+        .steps-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 4px;
+            background: #f8f9fa;
+            transition: background 0.2s;
+        }
+        .steps-header:hover {
+            background: #e9ecef;
+        }
+        .steps-header strong {
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .steps-toggle {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        #stepsContainer {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 0.5rem 0;
+            font-size: 0.8rem;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+        }
+        #stepsContainer.collapsed {
+            max-height: 0;
+            overflow: hidden;
+            margin: 0;
+            opacity: 0;
+        }
+        .step-item {
+            padding: 0.4rem 0.6rem;
+            margin: 0.2rem 0;
+            border-radius: 4px;
+            border-left: 3px solid #ddd;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .step-item.processing {
+            border-left-color: #0066cc;
+            background: #e6f2ff;
+        }
+        .step-item.completed {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        .step-item.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .step-item.skipped {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        .step-item strong {
+            min-width: 120px;
+            font-size: 0.75rem;
+        }
+        .step-item div {
+            flex: 1;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .services-used {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin-top: 0.5rem;
+        }
+        .service-badge {
+            padding: 0.25rem 0.6rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .speech-recording {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar with Search -->
+    <nav class="top-navbar">
+        <div class="navbar-content">
+            <a href="/" class="navbar-brand">
+                <i class="bi bi-shield-check"></i>
+                <span>Vehicle Claim Management</span>
+            </a>
+            <button type="button" class="btn btn-link text-white p-2 ms-2" id="infoBtn" title="Learn about app capabilities" style="text-decoration: none; font-size: 1.2rem;">
+                <i class="bi bi-info-circle"></i>
+            </button>
+            <div class="search-bar-container">
+                <form id="queryForm" class="search-form">
+                    <input type="text" 
+                           id="queryInput"
+                           name="text" 
+                           class="search-input" 
+                           placeholder="Ask questions, search files, get FAQs, or explain claims... (e.g., 'Show damaged vehicles', 'What documents are needed?', 'Explain claim process')" 
+                           value="{{ request.args.get('q', '') }}">
+                    <button type="button" id="speechBtn" class="search-btn" 
+                            data-bs-toggle="tooltip" 
+                            data-bs-placement="bottom" 
+                            data-bs-html="true"
+                            title="Record speech<br><small><strong>Supported languages:</strong><br>English, Tamil, Hindi</small>">
+                        <i class="bi bi-mic"></i>
+                    </button>
+                    <button type="submit" class="search-btn" id="submitBtn">
+                        <i class="bi bi-search"></i> Query
+                    </button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' if category == 'info' else 'warning' }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' if category == 'info' else 'exclamation-circle' }}"></i>
+                        {{ message|safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">
+                <i class="bi bi-shield-check"></i> Vehicle Claim Management
+            </h1>
+            <p class="page-subtitle">Upload vehicle claim documents and photos, let Azure AI understand them, and search across all vehicle claims in seconds.</p>
+        </div>
+
+        <!-- AI services overview strip -->
+        <div class="ai-strip">
+            <div class="ai-strip-title">
+                <i class="bi bi-stars"></i>
+                <span>End‑to‑end Azure AI pipeline with multimodal input, translation, safety, CLU, routing, and RAG</span>
+            </div>
+            <div class="ai-strip-chips">
+                <span class="ai-chip ai-chip-doc"><i class="bi bi-file-text"></i> Document Intelligence</span>
+                <span class="ai-chip ai-chip-vision"><i class="bi bi-image"></i> Computer Vision</span>
+                <span class="ai-chip ai-chip-custom"><i class="bi bi-bounding-box"></i> Custom Vision</span>
+                <span class="ai-chip ai-chip-search"><i class="bi bi-search"></i> Azure AI Search</span>
+                <span class="ai-chip ai-chip-language"><i class="bi bi-chat-dots"></i> Language Service</span>
+                <span class="ai-chip ai-chip-doc"><i class="bi bi-mic"></i> Speech Service</span>
+                <span class="ai-chip ai-chip-vision"><i class="bi bi-translate"></i> Translator</span>
+                <span class="ai-chip ai-chip-custom"><i class="bi bi-shield-check"></i> Content Safety</span>
+                <span class="ai-chip ai-chip-search"><i class="bi bi-diagram-3"></i> CLU</span>
+                <span class="ai-chip ai-chip-language"><i class="bi bi-robot"></i> Custom QA</span>
+                <span class="ai-chip ai-chip-doc"><i class="bi bi-lightbulb"></i> Grounded RAG</span>
+                <span class="ai-chip ai-chip-vision"><i class="bi bi-stars"></i> Azure OpenAI</span>
+                <span class="ai-chip ai-chip-custom"><i class="bi bi-bounding-boxes"></i> Object Detection</span>
+                <span class="ai-chip ai-chip-search"><i class="bi bi-emoji-smile"></i> Sentiment Analysis</span>
+                <span class="ai-chip ai-chip-doc"><i class="bi bi-diagram-3-fill"></i> Foundry</span>
+                <span class="ai-chip ai-chip-vision"><i class="bi bi-robot"></i> Agent</span>
+            </div>
+        </div>
+
+        <!-- Processed Claims Quick Access -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="bi bi-list-check text-primary"></i>
+                                <strong class="ms-2">Processed Claims</strong>
+                                <span class="text-muted ms-2">View all processed claims with invoice numbers and decisions</span>
+                            </div>
+                            <a href="/claims" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-list-ul"></i> View All Claims
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="row">
+            <!-- Document Upload Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="card" style="height: 100%;">
+                    <div class="card-header">
+                        <i class="bi bi-file-pdf"></i> Upload Document
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-3 flex-grow-1">
+                            <label class="form-label">Select PDF Document</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" class="form-control" id="documentFile" name="file" 
+                                       accept=".pdf">
+                                <label for="documentFile" class="file-input-label">
+                                    <i class="bi bi-file-pdf"></i><br>
+                                    <span>Click to browse or drag and drop</span><br>
+                                    <small class="text-muted">PDF documents only</small>
+                                </label>
+                            </div>
+                            <div id="documentFileName" class="file-name mt-2"></div>
+                        </div>
+                        <div class="mt-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-file-pdf" id="docStatusIcon"></i> 
+                                <span id="docStatusText">Document: Not selected</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Upload Card -->
+            <div class="col-lg-6 mb-3">
+                <div class="card" style="height: 100%;">
+                    <div class="card-header">
+                        <i class="bi bi-image"></i> Upload Image
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <div class="mb-3 flex-grow-1">
+                            <label class="form-label">Select Image File</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" class="form-control" id="imageFile" name="file" 
+                                       accept=".jpg,.jpeg,.png,.gif,.bmp">
+                                <label for="imageFile" class="file-input-label">
+                                    <i class="bi bi-image"></i><br>
+                                    <span>Click to browse or drag and drop</span><br>
+                                    <small class="text-muted">Image files (JPG, PNG, GIF, BMP)</small>
+                                </label>
+                            </div>
+                            <div id="imageFileName" class="file-name mt-2"></div>
+                        </div>
+                        <div class="mt-auto">
+                            <small class="text-muted">
+                                <i class="bi bi-image" id="imgStatusIcon"></i> 
+                                <span id="imgStatusText">Image: Not selected</span>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Claim Button Section -->
+        <div class="row">
+            <div class="col-lg-8 offset-lg-2 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center py-4">
+                        <p class="text-muted mb-3">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Required:</strong> Both document and image must be selected to process the claim.
+                        </p>
+                        <button type="button" class="btn btn-primary btn-lg px-5" id="processClaimBtn" disabled>
+                            <i class="bi bi-play-circle"></i> Analyze & Process Claim
+                        </button>
+                        <div id="claimProcessingResult" class="mt-4" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Capabilities Info Modal -->
+    <div class="modal fade" id="capabilitiesModal" tabindex="-1" aria-labelledby="capabilitiesModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="capabilitiesModalLabel">
+                        <i class="bi bi-info-circle"></i> Application Capabilities
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="lead mb-4">This Vehicle Claim Management application leverages Azure AI services to provide intelligent claim processing and analysis.</p>
+                    
+                    <div class="row g-4">
+                        <!-- Upload and Analyze -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-cloud-upload-fill text-primary" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mb-0 ms-3">Upload & Analyze</h5>
+                                    </div>
+                                    <p class="card-text">Upload vehicle claim documents (PDF) and images to automatically extract and analyze claim information.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle text-success"></i> Document Intelligence for PDF processing</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Computer Vision for image analysis</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Custom Vision for damage classification</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Object Detection for damage localization</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Language Service for entity extraction</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- AI Agent Processing -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-success">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-robot text-success" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mb-0 ms-3">AI Agent Processing</h5>
+                                    </div>
+                                    <p class="card-text">3-agent AI pipeline powered by Azure AI Foundry for intelligent claim decision-making.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-1-circle text-primary"></i> <strong>Claim Understanding Agent</strong> - Normalizes and validates claim data</li>
+                                        <li><i class="bi bi-2-circle text-info"></i> <strong>Evidence Confidence Agent</strong> - Evaluates evidence strength</li>
+                                        <li><i class="bi bi-3-circle text-success"></i> <strong>Claim Triage Agent</strong> - Makes final decision (APPROVED/REJECTED/WAITING)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Search & Query -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-info">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-search text-info" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mb-0 ms-3">Search & Query</h5>
+                                    </div>
+                                    <p class="card-text">Intelligent search across all processed claims using natural language queries.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle text-success"></i> Azure AI Search for semantic search</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Natural language query processing</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Filter by vehicle type, damage, amount</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Voice input support (Speech Service)</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> CLU (Conversational Language Understanding)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FAQ & Chat -->
+                        <div class="col-md-6">
+                            <div class="card h-100 border-warning">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-question-circle-fill text-warning" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mb-0 ms-3">FAQ & Chat Support</h5>
+                                    </div>
+                                    <p class="card-text">Get instant answers to common questions and chat with an AI assistant.</p>
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle text-success"></i> Interactive chatbot for claim queries</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> FAQ database with common questions</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Grounded RAG for accurate responses</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Custom QA system</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Features -->
+                        <div class="col-12">
+                            <div class="card border-secondary">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="bi bi-stars text-secondary" style="font-size: 2rem;"></i>
+                                        <h5 class="card-title mb-0 ms-3">Additional Features</h5>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li><i class="bi bi-translate text-primary"></i> <strong>Translation</strong> - Multi-language support</li>
+                                                <li><i class="bi bi-shield-check text-success"></i> <strong>Content Safety</strong> - Safe content filtering</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li><i class="bi bi-emoji-smile text-warning"></i> <strong>Sentiment Analysis</strong> - Analyze claim sentiment</li>
+                                                <li><i class="bi bi-list-check text-info"></i> <strong>Claim History</strong> - View all processed claims</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <ul class="list-unstyled">
+                                                <li><i class="bi bi-x-circle text-danger"></i> <strong>Duplicate Detection</strong> - Automatic invoice duplicate checking</li>
+                                                <li><i class="bi bi-diagram-3 text-secondary"></i> <strong>Azure AI Foundry</strong> - Enterprise AI platform</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Got it!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loadingModal" class="loading-modal" style="display: none !important;">
+        <div class="loading-content">
+            <h3><i class="bi bi-hourglass-split"></i> Processing Query</h3>
+            <p class="text-muted" style="font-size: 0.9rem;">Running through Azure AI pipeline...</p>
+            <div id="stepsSection" style="display: none;">
+                <div class="steps-header" onclick="toggleSteps()">
+                    <strong><i class="bi bi-list-check"></i> Processing Steps</strong>
+                    <span class="steps-toggle" id="stepsToggle">
+                        <i class="bi bi-chevron-down"></i> Show
+                    </span>
+                </div>
+                <div id="stepsContainer" class="collapsed"></div>
+            </div>
+            <div id="servicesContainer" class="services-used"></div>
+        </div>
+    </div>
+
+    <!-- Feedback Popup -->
+    <div id="feedbackPopup" class="feedback-popup" style="display: none;">
+        <div class="feedback-content">
+            <div class="feedback-header">
+                <h5><i class="bi bi-chat-dots"></i> Share Your Feedback</h5>
+                <button type="button" class="btn-close" onclick="closeFeedbackPopup()" aria-label="Close"></button>
+            </div>
+            <div class="feedback-body">
+                <p class="text-muted mb-3">We'd love to hear your thoughts! Your feedback helps us improve.</p>
+                <form id="feedbackForm">
+                    <div class="mb-3">
+                        <label for="feedbackText" class="form-label">Your Feedback</label>
+                        <textarea 
+                            class="form-control" 
+                            id="feedbackText" 
+                            rows="4" 
+                            placeholder="Enter your feedback here..."
+                            required
+                        ></textarea>
+                    </div>
+                    <div id="sentimentResult" class="sentiment-result" style="display: none;">
+                        <div class="alert" id="sentimentAlert">
+                            <strong>Sentiment Detected:</strong> <span id="sentimentLabel"></span>
+                            <br><small>Confidence: <span id="sentimentConfidence"></span></small>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary flex-grow-1">
+                            <i class="bi bi-send"></i> Submit Feedback
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="closeFeedbackPopup()">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Bot Popup -->
+    <div id="chatBotPopup" class="chat-bot-popup" style="display: none;">
+        <div class="chat-bot-content">
+            <div class="chat-bot-header">
+                <h5><i class="bi bi-robot"></i> Insurance Assistant</h5>
+                <div class="chat-bot-header-actions">
+                    <button type="button" class="btn btn-sm btn-outline-light" onclick="clearChatHistory()" title="Clear History">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <button type="button" class="btn-close btn-close-white" onclick="closeChatBot()" aria-label="Close"></button>
+                </div>
+            </div>
+            <div class="chat-bot-body" id="chatBotBody">
+                <div class="chat-message bot-message">
+                    <div class="message-content">
+                        <i class="bi bi-robot"></i> Hello! I'm your insurance assistant. How can I help you today?
+                    </div>
+                </div>
+            </div>
+            <div class="chat-bot-footer">
+                <form id="chatBotForm" onsubmit="sendChatMessage(event)">
+                    <div class="input-group">
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            id="chatInput" 
+                            placeholder="Type your message..."
+                            autocomplete="off"
+                        />
+                        <button type="submit" class="btn btn-primary" id="chatSendBtn">
+                            <i class="bi bi-send"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Bot Button (Fixed at bottom right, next to feedback) -->
+    <button id="chatBotButton" class="chat-bot-button" onclick="openChatBot()" title="Chat with Assistant">
+        <i class="bi bi-robot"></i>
+    </button>
+
+    <!-- Feedback Button (Fixed at bottom right) -->
+    <button id="feedbackButton" class="feedback-button" onclick="openFeedbackPopup()" title="Share Feedback">
+        <i class="bi bi-chat-dots-fill"></i>
+    </button>
+
+    <style>
+        /* Feedback Popup Styles */
+        .feedback-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1050;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .feedback-content {
+            padding: 0;
+        }
+
+        .feedback-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 1.25rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feedback-header h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .feedback-header .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+
+        .feedback-header .btn-close:hover {
+            opacity: 1;
+        }
+
+        .feedback-body {
+            padding: 1.5rem;
+        }
+
+        .sentiment-result {
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .sentiment-result .alert {
+            margin-bottom: 0;
+        }
+
+        .sentiment-result .alert.positive {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border-color: #badbcc;
+        }
+
+        .sentiment-result .alert.negative {
+            background-color: #f8d7da;
+            color: #842029;
+            border-color: #f5c2c7;
+        }
+
+        .sentiment-result .alert.neutral {
+            background-color: #d1ecf1;
+            color: #055160;
+            border-color: #bee5eb;
+        }
+
+        .sentiment-result .alert.mixed {
+            background-color: #fff3cd;
+            color: #856404;
+            border-color: #ffecb5;
+        }
+
+        .feedback-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feedback-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .feedback-button:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .feedback-popup {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+            }
+        }
+
+        /* Chat Bot Styles */
+        .chat-bot-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 400px;
+            max-width: calc(100vw - 40px);
+            height: 600px;
+            max-height: calc(100vh - 120px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            z-index: 1050;
+            animation: slideUp 0.3s ease-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-bot-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .chat-bot-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 1.25rem;
+            border-radius: 16px 16px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-bot-header h5 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-bot-header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .chat-bot-header .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+
+        .chat-bot-header .btn-close:hover {
+            opacity: 1;
+        }
+
+        .chat-bot-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-message {
+            display: flex;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            justify-content: flex-end;
+        }
+
+        .bot-message {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 75%;
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+
+        .user-message .message-content {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .bot-message .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #dee2e6;
+            border-bottom-left-radius: 4px;
+        }
+
+        .bot-message .message-content i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+
+        .chat-bot-footer {
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+            background: white;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .chat-bot-footer .input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-bot-footer .form-control {
+            border-radius: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .chat-bot-footer .btn {
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-bot-button {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+            z-index: 1040;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .chat-bot-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .chat-bot-button:active {
+            transform: scale(0.95);
+        }
+
+        .feedback-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .chat-bot-popup {
+                width: calc(100vw - 40px);
+                right: 20px;
+                left: 20px;
+                height: calc(100vh - 100px);
+            }
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File input display for document
+        const documentFile = document.getElementById('documentFile');
+        const imageFile = document.getElementById('imageFile');
+        const processClaimBtn = document.getElementById('processClaimBtn');
+        const docStatusIcon = document.getElementById('docStatusIcon');
+        const docStatusText = document.getElementById('docStatusText');
+        const imgStatusIcon = document.getElementById('imgStatusIcon');
+        const imgStatusText = document.getElementById('imgStatusText');
+
+        function updateProcessButtonState() {
+            const hasDocument = documentFile.files.length > 0;
+            const hasImage = imageFile.files.length > 0;
+            const bothSelected = hasDocument && hasImage;
+
+            // Update button state
+            processClaimBtn.disabled = !bothSelected;
+            
+            if (bothSelected) {
+                processClaimBtn.classList.remove('btn-secondary');
+                processClaimBtn.classList.add('btn-primary');
+            } else {
+                processClaimBtn.classList.remove('btn-primary');
+                processClaimBtn.classList.add('btn-secondary');
+            }
+
+            // Update document status
+            if (hasDocument) {
+                docStatusIcon.className = 'bi bi-check-circle-fill text-success';
+                docStatusText.textContent = 'Document: Selected';
+            } else {
+                docStatusIcon.className = 'bi bi-file-pdf text-muted';
+                docStatusText.textContent = 'Document: Not selected';
+            }
+
+            // Update image status
+            if (hasImage) {
+                imgStatusIcon.className = 'bi bi-check-circle-fill text-success';
+                imgStatusText.textContent = 'Image: Selected';
+            } else {
+                imgStatusIcon.className = 'bi bi-image text-muted';
+                imgStatusText.textContent = 'Image: Not selected';
+            }
+        }
+
+        documentFile.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('documentFileName').textContent = fileName ? '✓ ' + fileName : '';
+            updateProcessButtonState();
+        });
+
+        // File input display for image
+        imageFile.addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name || '';
+            document.getElementById('imageFileName').textContent = fileName ? '✓ ' + fileName : '';
+            updateProcessButtonState();
+        });
+
+        // Initialize button state
+        updateProcessButtonState();
+
+        // Display image with bounding boxes if detection data exists
+        function displayImageWithBoxes() {
+            const container = document.getElementById('image-display-container');
+            if (!container) {
+                console.log('Container not found');
+                return;
+            }
+            
+            console.log('Container found, processing...');
+            
+            try {
+                const claimId = container.getAttribute('data-claim-id');
+                const filename = container.getAttribute('data-filename');
+                const detectionsJson = container.getAttribute('data-detections');
+                
+                console.log('Claim ID:', claimId);
+                console.log('Filename:', filename);
+                console.log('Detections JSON length:', detectionsJson ? detectionsJson.length : 0);
+                
+                if (!claimId || !filename || !detectionsJson) {
+                    console.log('Missing data attributes - claimId:', claimId, 'filename:', filename, 'detectionsJson:', !!detectionsJson);
+                    return;
+                }
+                
+                const detections = JSON.parse(detectionsJson);
+                console.log('Parsed detections:', detections);
+                
+                // Get best detection (highest confidence)
+                const bestDetection = detections.best_detection || (detections.detections && detections.detections.length > 0 
+                    ? detections.detections.reduce((best, current) => 
+                        (current.probability > (best?.probability || 0)) ? current : best, null)
+                    : null);
+                
+                if (!bestDetection || !bestDetection.bounding_box) {
+                    console.log('No best detection found');
+                    return;
+                }
+                
+                console.log('Best detection:', bestDetection);
+                
+                // Create image display
+                const imageUrl = `/serve-image/${encodeURIComponent(claimId)}/${encodeURIComponent(filename)}`;
+                console.log('Image URL:', imageUrl);
+                const img = new Image();
+                
+                img.onerror = function() {
+                    console.error('Failed to load image:', imageUrl);
+                    container.innerHTML = '<div class="alert alert-warning">Failed to load image. Please check the image URL.</div>';
+                };
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.border = '2px solid #dee2e6';
+                    canvas.style.borderRadius = '8px';
+                    canvas.style.marginTop = '1rem';
+                    canvas.style.display = 'block';
+                    
+                    // Draw image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Draw only the best detection (highest confidence)
+                    const bb = bestDetection.bounding_box;
+                    const left = bb.left * canvas.width;
+                    const top = bb.top * canvas.height;
+                    const width = bb.width * canvas.width;
+                    const height = bb.height * canvas.height;
+                    
+                    // Draw rectangle (no label)
+                    ctx.strokeStyle = '#dc3545';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(left, top, width, height);
+                    
+                    // Clear and add content to container
+                    container.innerHTML = '<strong>Image with Highest Confidence Damage Detection:</strong><br>';
+                    container.appendChild(canvas);
+                    
+                    // Add detection info
+                    const detectionInfo = document.createElement('div');
+                    detectionInfo.className = 'mt-2';
+                    detectionInfo.style.background = '#f8f9fa';
+                    detectionInfo.style.padding = '1rem';
+                    detectionInfo.style.borderRadius = '8px';
+                    detectionInfo.innerHTML = `<strong>Best Detection:</strong><br>`;
+                    detectionInfo.innerHTML += `<small>${bestDetection.tag_name || 'Damaged Area'} - Confidence: ${(bestDetection.probability * 100).toFixed(1)}%</small>`;
+                    container.appendChild(detectionInfo);
+                };
+                
+                img.src = imageUrl;
+            } catch (error) {
+                console.error('Error displaying image with boxes:', error);
+                container.innerHTML = '<div class="alert alert-danger">Error displaying image: ' + error.message + '</div>';
+            }
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Small delay to ensure flash messages are rendered
+            setTimeout(displayImageWithBoxes, 100);
+        });
+        
+        // Also try after a longer delay in case flash messages load slowly
+        setTimeout(displayImageWithBoxes, 500);
+
+        // Toggle steps visibility
+        function toggleSteps() {
+            const container = document.getElementById('stepsContainer');
+            const toggle = document.getElementById('stepsToggle');
+            const icon = toggle.querySelector('i');
+            
+            if (container.classList.contains('collapsed')) {
+                container.classList.remove('collapsed');
+                toggle.innerHTML = '<i class="bi bi-chevron-up"></i> Hide';
+            } else {
+                container.classList.add('collapsed');
+                toggle.innerHTML = '<i class="bi bi-chevron-down"></i> Show';
+            }
+        }
+
+        // Convert AudioBuffer to WAV format
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+            
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+            
+            const length = buffer.length * numChannels * bytesPerSample;
+            const arrayBuffer = new ArrayBuffer(44 + length);
+            const view = new DataView(arrayBuffer);
+            
+            // WAV header
+            const writeString = (offset, string) => {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            };
+            
+            writeString(0, 'RIFF');
+            view.setUint32(4, 36 + length, true);
+            writeString(8, 'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(36, 'data');
+            view.setUint32(40, length, true);
+            
+            // Convert float samples to 16-bit PCM
+            let offset = 44;
+            for (let i = 0; i < buffer.length; i++) {
+                for (let channel = 0; channel < numChannels; channel++) {
+                    const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+                    view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+            
+            return new Blob([arrayBuffer], { type: 'audio/wav' });
+        }
+
+        // Initialize Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Info button for capabilities modal
+        const infoBtn = document.getElementById('infoBtn');
+        if (infoBtn) {
+            infoBtn.addEventListener('click', function() {
+                const modal = new bootstrap.Modal(document.getElementById('capabilitiesModal'));
+                modal.show();
+            });
+        }
+
+        // Query form handling
+        const queryForm = document.getElementById('queryForm');
+        const queryInput = document.getElementById('queryInput');
+        const speechBtn = document.getElementById('speechBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingModal = document.getElementById('loadingModal');
+        const stepsContainer = document.getElementById('stepsContainer');
+        const servicesContainer = document.getElementById('servicesContainer');
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Speech recording
+        speechBtn.addEventListener('click', async function() {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        try {
+                            if (audioChunks.length === 0) {
+                                throw new Error('No audio recorded. Please try again.');
+                            }
+                            
+                            queryInput.value = "Recording complete. Converting audio...";
+                            
+                            // Convert WebM to WAV using Web Audio API
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                            
+                            if (audioBlob.size < 1000) {
+                                throw new Error('Audio recording too short. Please record for at least 1 second.');
+                            }
+                            
+                            const arrayBuffer = await audioBlob.arrayBuffer();
+                            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                            
+                            // Check if audio has actual content
+                            const hasAudio = audioBuffer.getChannelData(0).some(sample => Math.abs(sample) > 0.01);
+                            if (!hasAudio) {
+                                throw new Error('No audio detected in recording. Please check your microphone and try again.');
+                            }
+                            
+                            // Convert to WAV format
+                            const wavBlob = audioBufferToWav(audioBuffer);
+                            
+                            queryInput.value = "Processing...";
+                            queryInput.disabled = true;
+                            submitBtn.disabled = true;
+                            
+                            // Process query with converted WAV audio
+                            await processQuery(null, wavBlob);
+                            
+                            stream.getTracks().forEach(track => track.stop());
+                        } catch (error) {
+                            console.error('Audio processing error:', error);
+                            alert('Error processing audio: ' + error.message + '\n\nPlease try typing your query instead.');
+                            queryInput.value = '';
+                            queryInput.disabled = false;
+                            submitBtn.disabled = false;
+                            speechBtn.disabled = false;
+                            isRecording = false;
+                            speechBtn.classList.remove('speech-recording');
+                            speechBtn.innerHTML = '<i class="bi bi-mic"></i>';
+                            queryInput.placeholder = "Ask questions, search files, get FAQs, or explain claims...";
+                            stream.getTracks().forEach(track => track.stop());
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    speechBtn.classList.add('speech-recording');
+                    speechBtn.innerHTML = '<i class="bi bi-stop-circle"></i>';
+                    queryInput.placeholder = "Recording... Click microphone again to stop";
+                } catch (err) {
+                    alert('Error accessing microphone: ' + err.message);
+                }
+            } else {
+                // Stop recording
+                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                    mediaRecorder.stop();
+                }
+                isRecording = false;
+                speechBtn.classList.remove('speech-recording');
+                speechBtn.innerHTML = '<i class="bi bi-mic"></i>';
+                queryInput.placeholder = "Ask questions, search files, get FAQs, or explain claims...";
+            }
+        });
+
+        // Form submission
+        queryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const text = queryInput.value.trim();
+            if (!text) {
+                alert('Please enter a query or use the microphone to record speech');
+                return;
+            }
+            await processQuery(text, null);
+        });
+
+        async function processQuery(text, audioBlob) {
+            // Show loading modal
+            loadingModal.classList.add('show');
+            stepsContainer.innerHTML = '';
+            servicesContainer.innerHTML = '';
+            
+            // Disable form
+            queryInput.disabled = true;
+            submitBtn.disabled = true;
+            speechBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                if (text) {
+                    formData.append('text', text);
+                }
+                if (audioBlob) {
+                    formData.append('audio', audioBlob, 'recording.wav');
+                }
+
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Display steps in compact format
+                if (data.steps && data.steps.length > 0) {
+                    // Show steps section
+                    document.getElementById('stepsSection').style.display = 'block';
+                    
+                    // Only show unique steps (skip duplicates)
+                    const seenSteps = new Set();
+                    data.steps.forEach(step => {
+                        const stepKey = step.step;
+                        if (!seenSteps.has(stepKey) || step.status === 'completed' || step.status === 'error') {
+                            seenSteps.add(stepKey);
+                            const stepDiv = document.createElement('div');
+                            stepDiv.className = `step-item ${step.status}`;
+                            stepDiv.innerHTML = `
+                                <strong>${step.step}</strong>
+                                <div>${step.message.length > 60 ? step.message.substring(0, 60) + '...' : step.message}</div>
+                            `;
+                            stepsContainer.appendChild(stepDiv);
+                        }
+                    });
+                }
+
+                // Display services used - compact
+                if (data.services_used && data.services_used.length > 0) {
+                    data.services_used.forEach(service => {
+                        const badge = document.createElement('span');
+                        badge.className = 'service-badge';
+                        badge.textContent = service;
+                        servicesContainer.appendChild(badge);
+                    });
+                }
+
+                // Show result
+                setTimeout(() => {
+                    if (data.result) {
+                        // Redirect to results page with data
+                        const resultData = encodeURIComponent(JSON.stringify(data));
+                        window.location.href = `/query-results?data=${resultData}`;
+                    } else {
+                        alert('No result returned');
+                        loadingModal.classList.remove('show');
+                        queryInput.disabled = false;
+                        submitBtn.disabled = false;
+                        speechBtn.disabled = false;
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred: ' + error.message);
+                loadingModal.classList.remove('show');
+                queryInput.disabled = false;
+                submitBtn.disabled = false;
+                speechBtn.disabled = false;
+            }
+        }
+
+        // Feedback Popup Functions
+        function openFeedbackPopup() {
+            const popup = document.getElementById('feedbackPopup');
+            popup.style.display = 'block';
+            document.getElementById('feedbackText').focus();
+        }
+
+        function closeFeedbackPopup() {
+            const popup = document.getElementById('feedbackPopup');
+            popup.style.display = 'none';
+            document.getElementById('feedbackForm').reset();
+            document.getElementById('sentimentResult').style.display = 'none';
+        }
+
+        // Handle feedback form submission
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const feedbackText = document.getElementById('feedbackText').value.trim();
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            if (!feedbackText) {
+                alert('Please enter your feedback');
+                return;
+            }
+            
+            // Disable submit button
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing...';
+            
+            try {
+                const response = await fetch('/submit-feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ feedback: feedbackText })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show sentiment result
+                    const sentimentResult = document.getElementById('sentimentResult');
+                    const sentimentAlert = document.getElementById('sentimentAlert');
+                    const sentimentLabel = document.getElementById('sentimentLabel');
+                    const sentimentConfidence = document.getElementById('sentimentConfidence');
+                    
+                    // Remove existing sentiment classes
+                    sentimentAlert.className = 'alert';
+                    
+                    // Add sentiment-specific class
+                    const sentiment = data.sentiment.toLowerCase();
+                    sentimentAlert.classList.add(sentiment);
+                    
+                    // Update content
+                    sentimentLabel.textContent = sentiment.charAt(0).toUpperCase() + sentiment.slice(1);
+                    sentimentConfidence.textContent = (data.overall_score * 100).toFixed(1) + '%';
+                    
+                    // Show result
+                    sentimentResult.style.display = 'block';
+                    
+                    // Scroll to result
+                    sentimentResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                    // Show success message
+                    submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Submitted!';
+                    submitBtn.classList.remove('btn-primary');
+                    submitBtn.classList.add('btn-success');
+                    
+                    // Clear form after 3 seconds and close popup
+                    setTimeout(() => {
+                        closeFeedbackPopup();
+                        submitBtn.innerHTML = originalBtnText;
+                        submitBtn.classList.remove('btn-success');
+                        submitBtn.classList.add('btn-primary');
+                        submitBtn.disabled = false;
+                    }, 3000);
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to submit feedback'));
+                    submitBtn.innerHTML = originalBtnText;
+                    submitBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('An error occurred while submitting feedback. Please try again.');
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Close popup when clicking outside
+        document.addEventListener('click', function(e) {
+            const popup = document.getElementById('feedbackPopup');
+            const button = document.getElementById('feedbackButton');
+            if (popup && popup.style.display === 'block' && 
+                !popup.contains(e.target) && 
+                !button.contains(e.target)) {
+                closeFeedbackPopup();
+            }
+        });
+
+        // Chat Bot Functions
+        function openChatBot() {
+            const popup = document.getElementById('chatBotPopup');
+            popup.style.display = 'flex';
+            document.getElementById('chatInput').focus();
+            scrollChatToBottom();
+        }
+
+        function closeChatBot() {
+            const popup = document.getElementById('chatBotPopup');
+            popup.style.display = 'none';
+        }
+
+        function scrollChatToBottom() {
+            const chatBody = document.getElementById('chatBotBody');
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
+        function addChatMessage(message, isUser) {
+            const chatBody = document.getElementById('chatBotBody');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (!isUser) {
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-robot';
+                contentDiv.appendChild(icon);
+            }
+            
+            const textNode = document.createTextNode(message);
+            contentDiv.appendChild(textNode);
+            messageDiv.appendChild(contentDiv);
+            chatBody.appendChild(messageDiv);
+            
+            scrollChatToBottom();
+        }
+
+        async function sendChatMessage(event) {
+            event.preventDefault();
+            
+            const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
+            const message = chatInput.value.trim();
+            
+            if (!message) {
+                return;
+            }
+            
+            // Disable input and button
+            chatInput.disabled = true;
+            chatSendBtn.disabled = true;
+            chatSendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            
+            // Add user message to chat
+            addChatMessage(message, true);
+            chatInput.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'chat-message bot-message';
+            typingIndicator.id = 'typingIndicator';
+            typingIndicator.innerHTML = '<div class="message-content"><i class="bi bi-robot"></i> <span class="typing-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+            document.getElementById('chatBotBody').appendChild(typingIndicator);
+            scrollChatToBottom();
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                const typing = document.getElementById('typingIndicator');
+                if (typing) {
+                    typing.remove();
+                }
+                
+                if (data.success) {
+                    // Add bot response
+                    addChatMessage(data.response, false);
+                    
+                    // Show context indicator if RAG was used
+                    if (data.context_used) {
+                        const contextBadge = document.createElement('small');
+                        contextBadge.className = 'text-muted';
+                        contextBadge.style.display = 'block';
+                        contextBadge.style.marginTop = '0.25rem';
+                        contextBadge.innerHTML = '<i class="bi bi-info-circle"></i> Answer based on indexed documents';
+                        const lastMessage = document.getElementById('chatBotBody').lastElementChild;
+                        if (lastMessage) {
+                            lastMessage.querySelector('.message-content').appendChild(contextBadge);
+                        }
+                    }
+                } else {
+                    addChatMessage('Sorry, I encountered an error. Please try again.', false);
+                }
+            } catch (error) {
+                console.error('Error sending chat message:', error);
+                
+                // Remove typing indicator
+                const typing = document.getElementById('typingIndicator');
+                if (typing) {
+                    typing.remove();
+                }
+                
+                addChatMessage('Sorry, I encountered an error. Please try again.', false);
+            } finally {
+                // Re-enable input and button
+                chatInput.disabled = false;
+                chatSendBtn.disabled = false;
+                chatSendBtn.innerHTML = '<i class="bi bi-send"></i>';
+                chatInput.focus();
+            }
+        }
+
+        async function clearChatHistory() {
+            if (!confirm('Are you sure you want to clear the conversation history?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/chat/clear', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Clear chat UI
+                    const chatBody = document.getElementById('chatBotBody');
+                    chatBody.innerHTML = '<div class="chat-message bot-message"><div class="message-content"><i class="bi bi-robot"></i> Hello! I\'m your insurance assistant. How can I help you today?</div></div>';
+                }
+            } catch (error) {
+                console.error('Error clearing chat history:', error);
+            }
+        }
+
+        // Close chat bot when clicking outside
+        document.addEventListener('click', function(e) {
+            const chatPopup = document.getElementById('chatBotPopup');
+            const chatButton = document.getElementById('chatBotButton');
+            if (chatPopup && chatPopup.style.display === 'flex' && 
+                !chatPopup.contains(e.target) && 
+                !chatButton.contains(e.target)) {
+                closeChatBot();
+            }
+        });
+
+        // Add typing dots animation
+        const style = document.createElement('style');
+        style.textContent = `
+            .typing-dots {
+                display: inline-block;
+            }
+            .typing-dots span {
+                animation: typing 1.4s infinite;
+                display: inline-block;
+            }
+            .typing-dots span:nth-child(2) {
+                animation-delay: 0.2s;
+            }
+            .typing-dots span:nth-child(3) {
+                animation-delay: 0.4s;
+            }
+            @keyframes typing {
+                0%, 60%, 100% {
+                    opacity: 0.3;
+                }
+                30% {
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Claim Processing
+        document.getElementById('processClaimBtn').addEventListener('click', async function() {
+            const btn = this;
+            const resultDiv = document.getElementById('claimProcessingResult');
+            const originalBtnText = btn.innerHTML;
+            const documentFile = document.getElementById('documentFile');
+            const imageFile = document.getElementById('imageFile');
+            
+            // Check if both files are selected
+            if (!documentFile.files[0] || !imageFile.files[0]) {
+                alert('Please select both a document and an image to process the claim.');
+                return;
+            }
+            
+            // Disable button and show loading
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+            resultDiv.style.display = 'none';
+            resultDiv.innerHTML = '';
+            
+            let documentResult = null;
+            let imageResult = null;
+            let imageClaimId = null;
+            let errors = [];
+            
+            try {
+                // Step 1: Upload and process document if selected
+                if (documentFile.files[0]) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing document...';
+                    const docFormData = new FormData();
+                    docFormData.append('file', documentFile.files[0]);
+                    
+                    try {
+                        const docResponse = await fetch('/api/upload-document', {
+                            method: 'POST',
+                            body: docFormData
+                        });
+                        const docData = await docResponse.json();
+                        
+                        if (docData.success) {
+                            documentResult = docData.result;
+                        } else {
+                            errors.push(`Document: ${docData.error}`);
+                        }
+                    } catch (error) {
+                        errors.push(`Document upload error: ${error.message}`);
+                    }
+                }
+                
+                // Step 2: Upload and process image if selected
+                if (imageFile.files[0]) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing image...';
+                    const imgFormData = new FormData();
+                    imgFormData.append('file', imageFile.files[0]);
+                    
+                    try {
+                        const imgResponse = await fetch('/api/upload-image', {
+                            method: 'POST',
+                            body: imgFormData
+                        });
+                        const imgData = await imgResponse.json();
+                        
+                        if (imgData.success) {
+                            imageResult = imgData.result;
+                            imageClaimId = imgData.claim_id;
+                        } else {
+                            errors.push(`Image: ${imgData.error}`);
+                        }
+                    } catch (error) {
+                        errors.push(`Image upload error: ${error.message}`);
+                    }
+                }
+                
+                // Step 3: Process claim with agents
+                if (errors.length === 0 || documentResult || imageResult) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing claim with AI agents...';
+                    
+                    const response = await fetch('/process-claim', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        // Display all results
+                        resultDiv.style.display = 'block';
+                        let html = '';
+                        
+                        // Show upload results
+                        if (documentResult) {
+                            html += formatDocumentResults(documentResult);
+                        }
+                        if (imageResult) {
+                            html += formatImageResults(imageResult, imageClaimId);
+                        }
+                        
+                        // Show claim processing results
+                        html += formatClaimResults(data.result, data.inputs);
+                        
+                        // Show appropriate message based on decision
+                        const finalDecision = data.result?.final_decision;
+                        const decisionStatus = finalDecision?.status || finalDecision?.decision || '';
+                        const isRejected = decisionStatus.toUpperCase().includes('REJECT') || 
+                                          decisionStatus.toUpperCase().includes('DENY') ||
+                                          data.rejected_by_duplicate;
+                        
+                        if (isRejected) {
+                            // Show rejection message
+                            if (data.rejected_by_duplicate) {
+                                html += '<div class="alert alert-danger"><i class="bi bi-x-circle"></i> <strong>Claim Rejected:</strong> Duplicate invoice detected. Invoice Number: <strong>' + escapeHtml(data.invoice_number || 'N/A') + '</strong></div>';
+                            } else {
+                                html += '<div class="alert alert-danger"><i class="bi bi-x-circle"></i> <strong>Claim Rejected</strong></div>';
+                            }
+                        } else {
+                            // Show success message
+                            if (data.invoice_number) {
+                                html += '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Claim processed successfully! Invoice Number: <strong>' + escapeHtml(data.invoice_number) + '</strong></div>';
+                            } else {
+                                html += '<div class="alert alert-success"><i class="bi bi-check-circle"></i> Claim processed successfully!</div>';
+                            }
+                        }
+                        
+                        resultDiv.innerHTML = html;
+                        
+                        // Render image with bounding boxes if detection data exists (use setTimeout to ensure DOM is ready)
+                        if (imageResult && imageResult.object_detection && imageResult.object_detection.detections && imageResult.object_detection.detections.length > 0) {
+                            setTimeout(() => {
+                                renderImageWithBoxes(imageClaimId, imageResult.filename, imageResult.object_detection);
+                            }, 100);
+                        }
+                        
+                        resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    } else {
+                        resultDiv.style.display = 'block';
+                        let errorHtml = '';
+                        if (errors.length > 0) {
+                            errorHtml += '<div class="alert alert-warning"><strong>Upload Warnings:</strong><ul>';
+                            errors.forEach(err => errorHtml += `<li>${err}</li>`);
+                            errorHtml += '</ul></div>';
+                        }
+                        
+                        // Check if it's a duplicate error
+                        if (data.duplicate) {
+                            errorHtml += '<div class="alert alert-danger">';
+                            errorHtml += '<i class="bi bi-exclamation-triangle"></i> <strong>Duplicate Invoice Detected!</strong><br>';
+                            errorHtml += escapeHtml(data.error) + '<br>';
+                            if (data.existing_claims && data.existing_claims.length > 0) {
+                                errorHtml += '<small>Existing claim(s): ' + data.existing_claims.map(c => '<code>' + escapeHtml(c) + '</code>').join(', ') + '</small>';
+                            }
+                            errorHtml += '</div>';
+                        } else {
+                            errorHtml += `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> ${escapeHtml(data.error || 'Error processing claim')}</div>`;
+                        }
+                        resultDiv.innerHTML = errorHtml;
+                    }
+                } else {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<div class="alert alert-danger"><strong>Errors:</strong><ul>${errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
+                }
+            } catch (error) {
+                console.error('Error processing claim:', error);
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle"></i> Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        });
+        
+        function formatDocumentResults(result) {
+            let html = '<div class="card mb-3">';
+            html += '<div class="card-header bg-primary text-white"><i class="bi bi-file-pdf"></i> Document Analysis Results</div>';
+            html += '<div class="card-body">';
+            
+            if (result.content_preview) {
+                html += '<h6>Content Preview:</h6>';
+                html += '<div class="bg-light p-3 rounded mb-3" style="font-size: 0.9rem; max-height: 200px; overflow-y: auto;">' + escapeHtml(result.content_preview) + '</div>';
+            }
+            
+            if (result.key_phrases && result.key_phrases.length > 0) {
+                html += '<h6>Key Phrases:</h6>';
+                html += '<div class="d-flex flex-wrap gap-1 mb-3">';
+                result.key_phrases.forEach(phrase => {
+                    if (phrase) {
+                        html += `<span class="badge bg-light text-dark border">${escapeHtml(String(phrase))}</span>`;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            if (result.entities && result.entities.length > 0) {
+                html += '<h6>Entities:</h6>';
+                html += '<div class="d-flex flex-wrap gap-1">';
+                result.entities.forEach(ent => {
+                    if (ent) {
+                        html += `<span class="badge bg-warning text-dark">${escapeHtml(String(ent))}</span>`;
+                    }
+                });
+                html += '</div>';
+            }
+            
+            html += '</div></div>';
+            return html;
+        }
+        
+        function formatImageResults(result, claimId) {
+            let html = '<div class="card mb-3">';
+            html += '<div class="card-header bg-info text-white"><i class="bi bi-image"></i> Image Analysis Results</div>';
+            html += '<div class="card-body">';
+            
+            if (result.vehicle_type || result.color) {
+                html += '<h6>Vehicle Information:</h6>';
+                html += '<div class="mb-3">';
+                if (result.vehicle_type) {
+                    html += `<span class="badge bg-info me-2"><i class="bi bi-car-front-fill"></i> Type: ${escapeHtml(result.vehicle_type).charAt(0).toUpperCase() + escapeHtml(result.vehicle_type).slice(1)}</span>`;
+                }
+                if (result.color) {
+                    html += `<span class="badge bg-secondary"><i class="bi bi-palette-fill"></i> Color: ${escapeHtml(result.color).charAt(0).toUpperCase() + escapeHtml(result.color).slice(1)}</span>`;
+                }
+                html += '</div>';
+            }
+            
+            if (result.caption) {
+                html += '<h6>Image Caption:</h6>';
+                html += `<p><em>${escapeHtml(result.caption)}</em></p>`;
+            }
+            
+            if (result.classification) {
+                html += '<h6>Classification:</h6>';
+                html += `<p><span class="badge bg-primary">${escapeHtml(result.classification.tag_name)}</span> `;
+                html += `<small>(Confidence: ${(result.classification.confidence * 100).toFixed(1)}%)</small></p>`;
+            }
+            
+            if (result.object_detection) {
+                html += '<h6>Object Detection:</h6>';
+                if (result.object_detection.best_detection) {
+                    const best = result.object_detection.best_detection;
+                    html += `<p>Best detection: <strong>${escapeHtml(best.tag_name || 'Damaged Area')}</strong> `;
+                    html += `(Confidence: ${(best.probability * 100).toFixed(1)}%)</p>`;
+                }
+                
+                // Add container for image with bounding boxes
+                if (result.object_detection.detections && result.object_detection.detections.length > 0) {
+                    html += '<div id="image-display-container-' + claimId + '" style="margin-top: 1rem;"></div>';
+                }
+            }
+            
+            html += '</div></div>';
+            return html;
+        }
+        
+        function renderImageWithBoxes(claimId, filename, detectionData) {
+            const containerId = 'image-display-container-' + claimId;
+            const container = document.getElementById(containerId);
+            if (!container) {
+                console.log('Image display container not found:', containerId);
+                return;
+            }
+            
+            try {
+                const detections = detectionData.detections || [];
+                const bestDetection = detectionData.best_detection || (detections.length > 0 
+                    ? detections.reduce((best, current) => 
+                        (current.probability > (best?.probability || 0)) ? current : best, null)
+                    : null);
+                
+                if (!bestDetection || !bestDetection.bounding_box) {
+                    console.log('No best detection with bounding box found');
+                    return;
+                }
+                
+                // Create image display
+                const imageUrl = `/serve-image/${encodeURIComponent(claimId)}/${encodeURIComponent(filename)}`;
+                const img = new Image();
+                
+                img.onerror = function() {
+                    console.error('Failed to load image:', imageUrl);
+                    container.innerHTML = '<div class="alert alert-warning">Failed to load image. Please check the image URL.</div>';
+                };
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    canvas.style.maxWidth = '100%';
+                    canvas.style.height = 'auto';
+                    canvas.style.border = '2px solid #dee2e6';
+                    canvas.style.borderRadius = '8px';
+                    canvas.style.marginTop = '1rem';
+                    canvas.style.display = 'block';
+                    
+                    // Draw image
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Draw only the best detection (highest confidence)
+                    const bb = bestDetection.bounding_box;
+                    const left = bb.left * canvas.width;
+                    const top = bb.top * canvas.height;
+                    const width = bb.width * canvas.width;
+                    const height = bb.height * canvas.height;
+                    
+                    // Draw rectangle (no label)
+                    ctx.strokeStyle = '#dc3545';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(left, top, width, height);
+                    
+                    // Clear and add content to container
+                    container.innerHTML = '<strong>Image with Highest Confidence Damage Detection:</strong><br>';
+                    container.appendChild(canvas);
+                    
+                    // Add detection info
+                    const detectionInfo = document.createElement('div');
+                    detectionInfo.className = 'mt-2';
+                    detectionInfo.style.background = '#f8f9fa';
+                    detectionInfo.style.padding = '1rem';
+                    detectionInfo.style.borderRadius = '8px';
+                    detectionInfo.innerHTML = `<strong>Best Detection:</strong><br>`;
+                    detectionInfo.innerHTML += `<small>${bestDetection.tag_name || 'Damaged Area'} - Confidence: ${(bestDetection.probability * 100).toFixed(1)}%</small>`;
+                    container.appendChild(detectionInfo);
+                };
+                
+                img.src = imageUrl;
+            } catch (error) {
+                console.error('Error displaying image with boxes:', error);
+                container.innerHTML = '<div class="alert alert-danger">Error displaying image: ' + error.message + '</div>';
+            }
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatClaimResults(result, inputs) {
+            let html = '<div class="claim-results">';
+            
+            // Agentic Workflow Overview
+            html += '<div class="card mb-4 border-primary">';
+            html += '<div class="card-header bg-gradient text-white" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">';
+            html += '<i class="bi bi-robot"></i> <strong>Agentic AI Workflow</strong>';
+            html += '</div>';
+            html += '<div class="card-body">';
+            html += '<p class="mb-3">This claim was processed through a <strong>3-agent AI pipeline</strong> that analyzes, validates, and makes intelligent decisions:</p>';
+            html += '<div class="row g-3">';
+            
+            // Agent 1: Claim Understanding
+            html += '<div class="col-md-4">';
+            html += '<div class="border rounded p-3 h-100 d-flex flex-column" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">';
+            html += '<div class="text-center mb-2" style="min-height: 48px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-lightbulb-fill text-primary" style="font-size: 2rem;"></i></div>';
+            html += '<h6 class="text-center mb-2"><strong>Agent 1: Claim Understanding</strong></h6>';
+            html += '<p class="small text-muted mb-0 text-center flex-grow-1">Normalizes and validates claim data from documents and images</p>';
+            html += '</div></div>';
+            
+            // Agent 2: Evidence Confidence
+            html += '<div class="col-md-4">';
+            html += '<div class="border rounded p-3 h-100 d-flex flex-column" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">';
+            html += '<div class="text-center mb-2" style="min-height: 48px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-shield-check-fill text-info" style="font-size: 2rem;"></i></div>';
+            html += '<h6 class="text-center mb-2"><strong>Agent 2: Evidence Confidence</strong></h6>';
+            html += '<p class="small text-muted mb-0 text-center flex-grow-1">Evaluates evidence strength and confidence from vision analysis</p>';
+            html += '</div></div>';
+            
+            // Agent 3: Claim Triage
+            html += '<div class="col-md-4">';
+            html += '<div class="border rounded p-3 h-100 d-flex flex-column" style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">';
+            html += '<div class="text-center mb-2" style="min-height: 48px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-diagram-3-fill text-success" style="font-size: 2rem;"></i></div>';
+            html += '<h6 class="text-center mb-2"><strong>Agent 3: Claim Triage</strong></h6>';
+            html += '<p class="small text-muted mb-0 text-center flex-grow-1">Makes final decision: APPROVED, REJECTED, or WAITING</p>';
+            html += '</div></div>';
+            
+            html += '</div></div></div>';
+            
+            // Claim Understanding Agent Results
+            if (result.claim_understanding) {
+                html += '<div class="card mb-3">';
+                html += '<div class="card-header bg-primary text-white">';
+                html += '<i class="bi bi-lightbulb"></i> <strong>Agent 1:</strong> Claim Understanding';
+                html += '<span class="badge bg-light text-primary ms-2">Azure AI Foundry Agent</span>';
+                html += '</div>';
+                html += '<div class="card-body">';
+                html += '<p class="text-muted small mb-3"><i class="bi bi-info-circle"></i> This agent analyzed your claim documents and images to extract and normalize key information.</p>';
+                
+                const understanding = result.claim_understanding;
+                if (understanding.normalized_claim) {
+                    html += '<h6>Extracted Claim Data:</h6>';
+                    const normalized = understanding.normalized_claim;
+                    html += '<div class="row g-2">';
+                    if (normalized.claim_amount) {
+                        html += `<div class="col-md-6"><strong>Claim Amount:</strong> ${escapeHtml(normalized.claim_amount)}</div>`;
+                    }
+                    if (normalized.vehicle_type) {
+                        html += `<div class="col-md-6"><strong>Vehicle Type:</strong> <span class="badge bg-secondary">${escapeHtml(normalized.vehicle_type)}</span></div>`;
+                    }
+                    if (normalized.invoice_number) {
+                        html += `<div class="col-md-6"><strong>Invoice Number:</strong> <code>${escapeHtml(normalized.invoice_number)}</code></div>`;
+                    }
+                    if (normalized.repair_amount) {
+                        html += `<div class="col-md-6"><strong>Repair Amount:</strong> ${escapeHtml(normalized.repair_amount)}</div>`;
+                    }
+                    html += '</div>';
+                }
+                if (understanding.missing_fields && understanding.missing_fields.length > 0) {
+                    html += '<h6 class="mt-3">Missing Fields:</h6>';
+                    html += '<ul>';
+                    understanding.missing_fields.forEach(field => {
+                        html += `<li><i class="bi bi-exclamation-circle text-warning"></i> ${escapeHtml(field)}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                html += '</div></div>';
+            }
+            
+            // Evidence Confidence Agent Results
+            if (result.evidence_confidence) {
+                html += '<div class="card mb-3">';
+                html += '<div class="card-header bg-info text-white">';
+                html += '<i class="bi bi-shield-check"></i> <strong>Agent 2:</strong> Evidence Confidence';
+                html += '<span class="badge bg-light text-info ms-2">Azure AI Foundry Agent</span>';
+                html += '</div>';
+                html += '<div class="card-body">';
+                html += '<p class="text-muted small mb-3"><i class="bi bi-info-circle"></i> This agent evaluated the strength and reliability of evidence from image analysis and vision signals.</p>';
+                
+                const evidence = result.evidence_confidence;
+                const strengthColor = evidence.evidence_strength === 'high' ? 'success' : evidence.evidence_strength === 'medium' ? 'warning' : 'danger';
+                const strengthIcon = evidence.evidence_strength === 'high' ? 'check-circle' : evidence.evidence_strength === 'medium' ? 'exclamation-triangle' : 'x-circle';
+                
+                html += '<div class="row g-3">';
+                html += `<div class="col-md-6">`;
+                html += `<p class="mb-2"><strong>Evidence Strength:</strong></p>`;
+                html += `<span class="badge bg-${strengthColor} fs-6"><i class="bi bi-${strengthIcon}"></i> ${escapeHtml(evidence.evidence_strength).toUpperCase()}</span>`;
+                html += `</div>`;
+                html += `<div class="col-md-6">`;
+                html += `<p class="mb-2"><strong>Confidence Score:</strong></p>`;
+                html += `<div class="progress" style="height: 30px;">`;
+                html += `<div class="progress-bar bg-${strengthColor}" role="progressbar" style="width: ${(evidence.confidence_score * 100)}%">`;
+                html += `${(evidence.confidence_score * 100).toFixed(1)}%`;
+                html += `</div></div>`;
+                html += `</div>`;
+                html += '</div>';
+                
+                if (evidence.recommendations && evidence.recommendations.length > 0) {
+                    html += '<h6 class="mt-3">Recommendations:</h6>';
+                    html += '<ul>';
+                    evidence.recommendations.forEach(rec => {
+                        html += `<li><i class="bi bi-lightbulb text-warning"></i> ${escapeHtml(rec)}</li>`;
+                    });
+                    html += '</ul>';
+                }
+                html += '</div></div>';
+            }
+            
+            // Final Decision (Agent 3: Claim Triage)
+            if (result.final_decision) {
+                html += '<div class="card mb-3">';
+                
+                const decision = result.final_decision;
+                const decisionText = decision.status || decision.decision || decision.action || 'Pending Review';
+                const isRejected = decisionText.toUpperCase().includes('REJECT') || decisionText.toUpperCase().includes('DENY');
+                const isApproved = decisionText.toUpperCase().includes('APPROVE');
+                const isWaiting = decisionText.toUpperCase().includes('WAITING') || decisionText.toUpperCase().includes('REVIEW') || decisionText.toUpperCase().includes('PENDING');
+                
+                // Set header color and icon based on decision
+                let headerClass = 'bg-success';
+                let headerIcon = 'bi-check-circle';
+                if (isRejected) {
+                    headerClass = 'bg-danger';
+                    headerIcon = 'bi-x-circle';
+                } else if (isWaiting) {
+                    headerClass = 'bg-warning';
+                    headerIcon = 'bi-hourglass-split';
+                } else if (isApproved) {
+                    headerClass = 'bg-success';
+                    headerIcon = 'bi-check-circle';
+                }
+                
+                html += `<div class="card-header ${headerClass} text-white">`;
+                html += `<i class="bi ${headerIcon}"></i> <strong>Agent 3:</strong> Claim Triage - Final Decision`;
+                html += '<span class="badge bg-light text-dark ms-2">Azure AI Foundry Agent</span>';
+                html += '</div>';
+                html += '<div class="card-body">';
+                html += '<p class="text-muted small mb-3"><i class="bi bi-info-circle"></i> This agent analyzed all previous agent outputs and made the final decision based on claim data, evidence strength, and business rules.</p>';
+                
+                // Handle different response structures from the agent
+                // status is the decision, reason is the reasoning
+                const reasoningText = decision.reason || decision.reasoning || decision.explanation || decision.justification || decision.note || '';
+                
+                if (decisionText && decisionText !== 'Pending Review') {
+                    const decisionClass = decisionText.toLowerCase().includes('approve') ? 'success' : 
+                                         decisionText.toLowerCase().includes('reject') || decisionText.toLowerCase().includes('deny') ? 'danger' : 
+                                         decisionText.toLowerCase().includes('waiting') || decisionText.toLowerCase().includes('review') || decisionText.toLowerCase().includes('pending') ? 'warning' : 'info';
+                    html += `<div class="alert alert-${decisionClass} border-0 mb-3">`;
+                    html += `<h5 class="mb-2"><strong>Decision:</strong> <span class="badge bg-${decisionClass} fs-5 px-3 py-2">${escapeHtml(decisionText)}</span></h5>`;
+                    if (reasoningText) {
+                        html += `<p class="mb-0 mt-2"><strong>Reasoning:</strong> ${escapeHtml(reasoningText)}</p>`;
+                    }
+                    html += '</div>';
+                } else {
+                    html += `<div class="alert alert-warning border-0">`;
+                    html += `<p class="mb-0"><strong>Decision:</strong> <span class="badge bg-warning fs-6">Pending Review</span></p>`;
+                    html += '</div>';
+                }
+                
+                html += '</div></div>';
+            } else {
+                // Show message if final_decision is missing
+                html += '<div class="card mb-3">';
+                html += '<div class="card-header bg-warning text-dark">';
+                html += '<i class="bi bi-exclamation-triangle"></i> <strong>Agent 3:</strong> Claim Triage - Final Decision';
+                html += '</div>';
+                html += '<div class="card-body">';
+                html += '<p class="text-muted">Final decision not available.</p>';
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processed Claims - Vehicle Claim Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --secondary-color: #004499;
+        }
+        body {
+            background: radial-gradient(circle at top left, #eef2ff 0, #e0f2fe 35%, #f3f4f6 70%, #e5e7eb 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .card {
+            border-radius: 16px;
+            border: 1px solid rgba(148,163,184,0.35);
+            box-shadow: 0 22px 45px rgba(15,23,42,0.22);
+            margin-bottom: 1.5rem;
+            background: white;
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 16px 16px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="top-navbar">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="/" class="text-white text-decoration-none">
+                <i class="bi bi-shield-check"></i> Vehicle Claim Management
+            </a>
+            <a href="/" class="btn btn-light btn-sm">
+                <i class="bi bi-house"></i> Home
+            </a>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-list-check"></i> Processed Claims
+            </div>
+            <div class="card-body">
+                {% if claims %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Claim ID</th>
+                                <th>Invoice Number</th>
+                                <th>Claim Amount</th>
+                                <th>Vehicle Type</th>
+                                <th>Decision</th>
+                                <th>Processed At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for claim in claims %}
+                            <tr>
+                                <td><code>{{ claim.claim_id }}</code></td>
+                                <td>
+                                    {% if claim.invoice_number %}
+                                        <span class="badge bg-info">{{ claim.invoice_number }}</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if claim.claim_data.claim_amount %}
+                                        {{ claim.claim_data.claim_amount }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if claim.claim_data.vehicle_type %}
+                                        <span class="badge bg-secondary">{{ claim.claim_data.vehicle_type|title }}</span>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if claim.claim_data.decision %}
+                                        {% set decision = claim.claim_data.decision|upper %}
+                                        {% if 'APPROVE' in decision %}
+                                            <span class="badge bg-success">{{ claim.claim_data.decision }}</span>
+                                        {% elif 'REJECT' in decision or 'DENY' in decision %}
+                                            <span class="badge bg-danger">{{ claim.claim_data.decision }}</span>
+                                        {% elif 'WAITING' in decision or 'REVIEW' in decision or 'PENDING' in decision %}
+                                            <span class="badge bg-warning">{{ claim.claim_data.decision }}</span>
+                                        {% else %}
+                                            <span class="badge bg-info">{{ claim.claim_data.decision }}</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if claim.processed_at %}
+                                        <small>{{ claim.processed_at[:19]|replace('T', ' ') }}</small>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No claims have been processed yet.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
